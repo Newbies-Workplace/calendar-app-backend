@@ -5,7 +5,6 @@ event_id String
 name String
 
 Event Event @relation(fields: [eventId], references: [id])
-eventId String
 TerminStatus TerminStatus[]
 }
 
@@ -32,6 +31,6 @@ participantId String
 }
 
 enum Status {
-YES
+AVAIABLE
 NO
 }
