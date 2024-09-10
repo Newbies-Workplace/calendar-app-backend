@@ -1,14 +1,42 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
 
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+model Participant {
+  participant_id String         @id @default(uuid())
+  event_id       String
+  name           String
+  is_organizer    Boolean        @default(false)
+  Event          Event          @relation(fields: [event_id], references: [event_id])
+  TerminStatus   TerminStatus[] 
+}
+
+model Event {
+  event_id       String         @id @default(uuid())
+  event_name     String
+  voting_start   DateTime
+  voting_end     DateTime
+  description    String    
+  Participants   Participant[]
+  TerminStatus   TerminStatus[]
+}
+
+model TerminStatus {
+  termin_status_id String       @id @default(uuid())
+  day              DateTime
+  event_id         String
+  participant_id   String
+  status           Status
+  Event            Event        @relation(fields: [event_id], references: [event_id])
+  Participant      Participant  @relation(fields: [participant_id], references: [participant_id])
+}
+
+enum Status {
+AVAILABLE
+NOT_AVAILABLE
 }
