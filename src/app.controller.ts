@@ -1,6 +1,7 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
 import { AppService } from './app.service';
 import { Event } from '@prisma/client';
+import { CreateEventDto } from './dtos/createEvent.dto';
 
 @Controller()
 export class AppController {
@@ -11,5 +12,8 @@ export class AppController {
     return await this.appService.getHello();
   }
 
-  //@Post()
+  @Post('rest/events')
+    createEvent(@Body() createEventDto: CreateEventDto) {
+      console.log(createEventDto);
+    }
 }
