@@ -18,10 +18,11 @@ model Participant {
 
 model Event {
   event_id       String         @id @default(uuid())
-  event_name     String
-  voting_start   DateTime
+  name           String
+  start          DateTime
+  end            DateTime
   voting_end     DateTime
-  description    String    
+  description    String?    
   Participants   Participant[]
   TerminStatus   TerminStatus[]
 }
