@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { AppService } from './app.service';
 import { Event } from '@prisma/client';
-import { CreateEventDto, EventMapper, EventResponse} from './dtos/createEvent.dto';
+import { CreateEventDto, EventMapper, EventResponse,
+CreateParticipantDto, ParticipantResponse} from './dtos/createEvent.dto';
 import { PrismaService } from 'src/prisma.service';
+import { randomUUID } from 'crypto';
 
 
 @Controller()
@@ -22,6 +24,27 @@ export class AppController {
     const event = await this.prisma.event.create({
        data : eventData,
      });
-     return EventMapper.toDto(event);
+     const owner = await this.prisma.participant.create({
+      data: {
+        event_id: event.event_id,
+        name: createEventDto.owner,
+        is_organizer: true
+      }
+     })
+     return EventMapper.toDto(event, owner);
     }
+
+    @Post('rest/events/:id/paricipants')
+  async createParticipant(@Body() createParticipantDto: CreateParticipantDto,@Param('id') id: string): Promise<ParticipantResponse>
+   {
+    const participant = await this.prisma.participant.create({
+      data: {
+        participant_id: randomUUID(),
+        event_id: id,
+        name: createParticipantDto.name,
+      },
+    });
+    return participant;
+  }
 }
+

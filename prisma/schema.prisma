@@ -11,7 +11,7 @@ model Participant {
   participant_id String         @id @default(uuid())
   event_id       String
   name           String
-  is_organizer    Boolean        @default(false)
+  is_organizer   Boolean        @default(false)
   Event          Event          @relation(fields: [event_id], references: [event_id])
   TerminStatus   TerminStatus[] 
 }
