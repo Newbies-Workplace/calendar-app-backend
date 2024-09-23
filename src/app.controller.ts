@@ -1,10 +1,13 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Req, Headers } from '@nestjs/common';
 import { AppService } from './app.service';
-import { Event } from '@prisma/client';
+import { Event, Status } from '@prisma/client';
 import { CreateEventDto, EventMapper, EventResponse,
 CreateParticipantDto, ParticipantResponse} from './dtos/createEvent.dto';
 import { PrismaService } from 'src/prisma.service';
 import { randomUUID } from 'crypto';
+import { CreateTerminStatusDto, TerminStatusResponse } from './dtos/TerminStatus.dto';
+import { Request } from 'express';
+
 
 
 @Controller()
@@ -46,5 +49,21 @@ export class AppController {
     });
     return participant;
   }
+
+  @Post ('rest/events/:id/statuses')
+  async createTerminStatus(@Body() createTerminStatusDto: CreateTerminStatusDto,
+  @Param('id') id: string,
+  @Headers("Participant") participant_id : string): Promise<TerminStatusResponse> {
+    console.log(id);
+    console.log(participant_id);
+    const terminStatus = await this.prisma.terminStatus.create({
+      data: {
+        day: createTerminStatusDto.day,
+        event_id: id,
+        participant_id,
+        status: createTerminStatusDto.status
+      }});
+      return terminStatus;
+}
 }
 
