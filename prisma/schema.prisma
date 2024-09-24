@@ -22,9 +22,15 @@ model Event {
   start          DateTime
   end            DateTime
   voting_end     DateTime
-  description    String?    
+  description    String?
+  status         EventStatus     @default(ACTIVE)    
   Participants   Participant[]
   TerminStatus   TerminStatus[]
+}
+
+enum EventStatus {
+  ACTIVE
+  COMPLETED
 }
 
 model TerminStatus {
