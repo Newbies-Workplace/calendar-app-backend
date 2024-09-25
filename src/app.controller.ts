@@ -78,13 +78,22 @@ export class AppController {
   ): Promise<TerminStatusResponse> {
     console.log(id);
     console.log(participant_id);
-    const terminStatus = await this.prisma.terminStatus.create({
-      data: {
+    const terminStatus = await this.prisma.terminStatus.upsert({
+      where:{
+        day_event_id_participant_id: {
+        day: createTerminStatusDto.day,
+        event_id: id,
+        participant_id: participant_id,
+      }},
+      create: {
         day: createTerminStatusDto.day,
         event_id: id,
         participant_id,
         status: createTerminStatusDto.status,
       },
+      update:{
+        status: createTerminStatusDto.status
+      }
     });
     return terminStatus;
   }
@@ -100,5 +109,22 @@ export class AppController {
 
     const owner = event.Participants.find((p) => p.is_organizer);
     return EventMapper.toDto(event, owner);
+  }
+
+  @Get('rest/events/:id/statuses')
+  async getTerminStatus(@Param('id') event_id: string): Promise<TerminStatusResponse[]> {
+    const TerminStatuses = await this.prisma.terminStatus.findMany({
+      where: { event_id: event_id },
+    });
+
+    const response = TerminStatuses.map(status => ({
+      day: status.day,
+      status: status.status,
+      participant_id: status.participant_id,
+      event_id: status.event_id,
+      termin_status_id: status.termin_status_id
+    }));
+
+    return response;
   }
 }

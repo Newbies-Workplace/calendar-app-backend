@@ -19,9 +19,9 @@ model Participant {
 model Event {
   event_id       String         @id @default(uuid())
   name           String
-  start          DateTime
-  end            DateTime
-  voting_end     DateTime
+  start          DateTime       @db.Date     
+  end            DateTime       @db.Date
+  voting_end     DateTime   
   description    String?
   status         EventStatus     @default(ACTIVE)    
   Participants   Participant[]
@@ -35,12 +35,13 @@ enum EventStatus {
 
 model TerminStatus {
   termin_status_id String       @id @default(uuid())
-  day              DateTime
+  day              DateTime     @db.Date
   event_id         String
   participant_id   String
   status           Status
   Event            Event        @relation(fields: [event_id], references: [event_id])
   Participant      Participant  @relation(fields: [participant_id], references: [participant_id])
+  @@unique([day, event_id, participant_id])
 }
 
 enum Status {
