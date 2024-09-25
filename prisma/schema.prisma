@@ -5,6 +5,7 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 model Participant {
@@ -13,17 +14,17 @@ model Participant {
   name           String
   is_organizer   Boolean        @default(false)
   Event          Event          @relation(fields: [event_id], references: [event_id])
-  TerminStatus   TerminStatus[] 
+  TerminStatus   TerminStatus[]
 }
 
 model Event {
   event_id       String         @id @default(uuid())
   name           String
-  start          DateTime       @db.Date     
+  start          DateTime       @db.Date
   end            DateTime       @db.Date
-  voting_end     DateTime   
+  voting_end     DateTime
   description    String?
-  status         EventStatus     @default(ACTIVE)    
+  status         EventStatus     @default(ACTIVE)
   Participants   Participant[]
   TerminStatus   TerminStatus[]
 }
