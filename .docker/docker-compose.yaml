@@ -1,0 +1,39 @@
+version: "3.4"
+
+services:
+  calendar-db:
+    image: mariadb:10.7
+    restart: unless-stopped
+    container_name: calendar-db
+    volumes:
+      - calendar-db:/var/lib/mysql
+    environment:
+      MARIADB_AUTO_UPGRADE: 1
+      MYSQL_ROOT_PASSWORD: calendar
+      MYSQL_DATABASE: calendar
+    ports:
+      - "127.0.0.1:3306:3306"
+    networks:
+      - calendar-back-local
+  calendar-api:
+    build:
+      context: ../
+    restart: unless-stopped
+    container_name: calendar-api
+    environment:
+      - DATABASE_URL=mysql://root:calendar@calendar-db:3306/calendar
+    ports:
+      - "3000:3000"
+    networks:
+      - calendar-back-local
+      - reverse-proxy_global
+    depends_on:
+      - calendar-db
+
+networks:
+  calendar-back-local:
+  reverse-proxy_global:
+    external: true
+
+volumes:
+  calendar-db:

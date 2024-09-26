@@ -12,10 +12,11 @@ CREATE TABLE `Participant` (
 CREATE TABLE `Event` (
     `event_id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
-    `start` DATETIME(3) NOT NULL,
-    `end` DATETIME(3) NOT NULL,
+    `start` DATE NOT NULL,
+    `end` DATE NOT NULL,
     `voting_end` DATETIME(3) NOT NULL,
     `description` VARCHAR(191) NULL,
+    `status` ENUM('ACTIVE', 'COMPLETED') NOT NULL DEFAULT 'ACTIVE',
 
     PRIMARY KEY (`event_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -23,11 +24,12 @@ CREATE TABLE `Event` (
 -- CreateTable
 CREATE TABLE `TerminStatus` (
     `termin_status_id` VARCHAR(191) NOT NULL,
-    `day` DATETIME(3) NOT NULL,
+    `day` DATE NOT NULL,
     `event_id` VARCHAR(191) NOT NULL,
     `participant_id` VARCHAR(191) NOT NULL,
     `status` ENUM('AVAILABLE', 'NOT_AVAILABLE') NOT NULL,
 
+    UNIQUE INDEX `TerminStatus_day_event_id_participant_id_key`(`day`, `event_id`, `participant_id`),
     PRIMARY KEY (`termin_status_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
