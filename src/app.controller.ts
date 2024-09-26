@@ -6,6 +6,9 @@ import {
   Param,
   Req,
   Headers,
+  Put,
+  Patch,
+  BadRequestException
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import { Event, Status } from '@prisma/client';
@@ -23,6 +26,7 @@ import {
   TerminStatusResponse,
 } from './dtos/TerminStatus.dto';
 import { Request } from 'express';
+
 
 @Controller()
 export class AppController {
@@ -70,7 +74,7 @@ export class AppController {
     return participant;
   }
 
-  @Post('rest/events/:id/statuses')
+  @Put('rest/events/:id/statuses')
   async createTerminStatus(
     @Body() createTerminStatusDto: CreateTerminStatusDto,
     @Param('id') id: string,
@@ -127,4 +131,21 @@ export class AppController {
 
     return response;
   }
+
+  @Patch('rest/events/:id/complete')
+  async completeEvent(
+    @Param('id') event_id: string, 
+  ): Promise<void> {
+    const event = await this.prisma.event.findUnique({
+      where: { event_id: event_id },
+    });
+
+      await this.prisma.event.update({
+      where: { event_id: event_id },
+      data: {
+        status: 'COMPLETED',
+      },
+    });
+  }
 }
+
