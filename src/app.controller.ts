@@ -45,6 +45,8 @@ export class AppController {
   @Post('rest/events')
   async createEvent(
     @Body() createEventDto: CreateEventDto,): Promise<EventResponse> {
+    await this.assert_compatibility_date(createEventDto.start, createEventDto.end)
+    await this.assert_voting_end(createEventDto.voting_end)
     const eventData = EventMapper.toPrismaCreateInput(createEventDto);
     console.log(eventData);
     const event = await this.prisma.event.create({
@@ -167,13 +169,17 @@ export class AppController {
     }})
   if (participant_count != 1){
     throw new HttpException(`Uczestnik z id ${participant_id} nie istnieje`, HttpStatus.BAD_REQUEST)
-  }
-    
-  }
+  }}
 
-  async assert_compatibility_date(start_date:Date, end_date:Date){
+  async assert_compatibility_date(start_date: Date, end_date: Date){
+    if (start_date > end_date) {
+      throw new HttpException('Data startu nie może być po dacie zakończenia wydarzenia.', HttpStatus.BAD_REQUEST);
+}}
 
-  }
+async assert_voting_end(voting_date: Date){
+  const current_date = new Date();
+  if (current_date > voting_date) {
+    throw new HttpException('Nieprawidłowo podano datę zakończenia głosowania', HttpStatus.BAD_REQUEST);
+}}
 }
-
 
