@@ -118,6 +118,20 @@ export class AppController {
     return EventMapper.toDto(event, owner);
   }
 
+  @Get('rest/events/:id/participants')
+  async getParticipants(@Param('id') event_id: string): Promise<ParticipantResponse[]> {
+    const Participants = await this.prisma.participant.findMany({
+      where: { event_id: event_id },
+    });
+    const response = Participants.map(participant => ({
+      name: participant.name,
+      event_id: participant.event_id,
+      participant_id: participant.participant_id
+    }));
+
+    return response;
+  }
+
   @Get('rest/events/:id/statuses')
   async getTerminStatus(@Param('id') event_id: string): Promise<TerminStatusResponse[]> {
     await this.assert_event_exist(event_id)
