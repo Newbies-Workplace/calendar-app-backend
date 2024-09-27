@@ -1,17 +1,33 @@
 import { Event, EventStatus, Participant } from '@prisma/client';
 import { randomUUID } from 'crypto';
+import { IsString, Length, IsOptional, IsDateString, IsISO8601 } from 'class-validator';
 
-export interface CreateEventDto {
-  name: string;
+export class CreateEventDto {
+@IsString()
+@Length(3, 20, { message: 'Nazwa musi mięć między 3 a 20 znaków' })
+name: string;
+
   owner: string;
+  
+  @IsString()
+  @IsOptional()
+  @Length(0, 200, { message: 'Opis max 200 zmaków' })
   description: string | null;
+  
+  @IsISO8601({ strict: true }, { message: 'format daty to YYYY-MM-DD' })
   start: Date;
+  
+  @IsISO8601({ strict: true }, { message: 'format daty to YYYY-MM-DD' })
   end: Date;
+
+  @IsDateString({ strict: true }, { message: 'format daty to  YYYY-MM-DDThh:mm' })
   voting_end: Date;
 }
 
 export class CreateParticipantDto {
-  name: string;
+    @IsString()
+    @Length(3, 20, { message: 'Imię musi mięć między 3 a 20 znaków' })
+    name: string;
 }
 
 export interface EventResponse {
