@@ -1,12 +1,16 @@
 import { Event, EventStatus, Participant } from '@prisma/client';
 import { randomUUID } from 'crypto';
-import { IsString, Length, IsOptional, IsDateString, IsISO8601 } from 'class-validator';
+import { IsString, Length, IsOptional, IsDateString, IsISO8601, IsNotEmpty } from 'class-validator';
 
 export class CreateEventDto {
-@IsString()
-@Length(3, 20, { message: 'Nazwa musi mięć między 3 a 20 znaków' })
-name: string;
+  @IsString()
+  @Length(3, 20, { message: 'Nazwa musi mięć między 3 a 20 znaków' })
+  @IsNotEmpty()
+  name: string;
 
+  @IsString()
+  @Length(3, 20, { message: 'Nazwa musi mięć między 3 a 20 znaków' })
+  @IsNotEmpty()
   owner: string;
   
   @IsString()

@@ -8,7 +8,9 @@ import {
   Headers,
   Put,
   Patch,
-  BadRequestException
+  BadRequestException,
+  HttpException,
+  HttpStatus
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import { Event, Status } from '@prisma/client';
@@ -42,8 +44,7 @@ export class AppController {
 
   @Post('rest/events')
   async createEvent(
-    @Body() createEventDto: CreateEventDto,
-  ): Promise<EventResponse> {
+    @Body() createEventDto: CreateEventDto,): Promise<EventResponse> {
     const eventData = EventMapper.toPrismaCreateInput(createEventDto);
     console.log(eventData);
     const event = await this.prisma.event.create({
@@ -59,7 +60,7 @@ export class AppController {
     return EventMapper.toDto(event, owner);
   }
 
-  @Post('rest/events/:id/paricipants')
+  @Post('rest/events/:id/participants')
   async createParticipant(
     @Body() createParticipantDto: CreateParticipantDto,
     @Param('id') id: string,
@@ -80,17 +81,17 @@ export class AppController {
     @Param('id') id: string,
     @Headers('Participant') participant_id: string,
   ): Promise<TerminStatusResponse> {
-    console.log(id);
-    console.log(participant_id);
+    await this.assert_event_exist(id)
+    await this.assert_participant_exist(participant_id)
     const terminStatus = await this.prisma.terminStatus.upsert({
       where:{
         day_event_id_participant_id: {
-        day: createTerminStatusDto.day,
+        day: new Date(createTerminStatusDto.day),
         event_id: id,
         participant_id: participant_id,
       }},
       create: {
-        day: createTerminStatusDto.day,
+        day: new Date(createTerminStatusDto.day),
         event_id: id,
         participant_id,
         status: createTerminStatusDto.status,
@@ -117,6 +118,7 @@ export class AppController {
 
   @Get('rest/events/:id/statuses')
   async getTerminStatus(@Param('id') event_id: string): Promise<TerminStatusResponse[]> {
+    await this.assert_event_exist(event_id)
     const TerminStatuses = await this.prisma.terminStatus.findMany({
       where: { event_id: event_id },
     });
@@ -136,6 +138,7 @@ export class AppController {
   async completeEvent(
     @Param('id') event_id: string, 
   ): Promise<void> {
+    await this.assert_event_exist(event_id)
     const event = await this.prisma.event.findUnique({
       where: { event_id: event_id },
     });
@@ -147,5 +150,30 @@ export class AppController {
       },
     });
   }
+
+  async assert_event_exist(event_id:string) {
+    const event_count = await this.prisma.event.count({
+    where:{
+     event_id: event_id
+    }})
+  if (event_count != 1){
+    throw new HttpException(`Event z id ${event_id} nie istnieje`, HttpStatus.BAD_REQUEST)
+  }}
+
+  async assert_participant_exist(participant_id:string) {
+    const participant_count = await this.prisma.participant.count({
+    where:{
+     participant_id: participant_id
+    }})
+  if (participant_count != 1){
+    throw new HttpException(`Uczestnik z id ${participant_id} nie istnieje`, HttpStatus.BAD_REQUEST)
+  }
+    
+  }
+
+  async assert_compatibility_date(start_date:Date, end_date:Date){
+
+  }
 }
+
 
