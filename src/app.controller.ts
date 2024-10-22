@@ -10,7 +10,8 @@ import {
   Patch,
   BadRequestException,
   HttpException,
-  HttpStatus
+  HttpStatus,
+  Res
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import { Event, Status } from '@prisma/client';
@@ -25,9 +26,11 @@ import { PrismaService } from 'src/prisma.service';
 import { randomUUID } from 'crypto';
 import {
   CreateTerminStatusDto,
+  EventDetailsResponse,
   TerminStatusResponse,
 } from './dtos/TerminStatus.dto';
 import { Request } from 'express';
+import { Response } from 'express';
 
 
 @Controller()
@@ -113,7 +116,7 @@ export class AppController {
         Participants: true,
       },
     });
-
+    
     const owner = event.Participants.find((p) => p.is_organizer);
     return EventMapper.toDto(event, owner);
   }
@@ -150,6 +153,23 @@ export class AppController {
     return response;
   }
 
+  @Get('rest/events/:id/details')
+  async getEventDetails(@Param('id') event_id: string): Promise<EventDetailsResponse> {
+
+    await this.assert_event_exist(event_id);
+    const event = await this.prisma.event.findUnique({
+      where: { event_id: event_id },
+    });
+
+    const response = {
+      name: event.name,
+      description: event.description,
+      event_id: event.event_id,
+    };
+
+    return response;
+  }
+  
   @Patch('rest/events/:id/complete')
   async completeEvent(
     @Param('id') event_id: string, 
