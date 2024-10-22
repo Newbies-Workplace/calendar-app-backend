@@ -37,11 +37,6 @@ export class AppController {
     private readonly prisma: PrismaService,
   ) {}
 
-  @Get()
-  async getHello(): Promise<Event[]> {
-    return await this.appService.getHello();
-  }
-
   @Post('rest/events')
   async createEvent(
     @Body() createEventDto: CreateEventDto,): Promise<EventResponse> {
