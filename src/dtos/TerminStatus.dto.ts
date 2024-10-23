@@ -17,9 +17,3 @@ export interface TerminStatusResponse {
   termin_status_id: string;
   status: Status;
 }
-
-export interface EventDetailsResponse {
-  name: string;
-  description: string;
-  event_id: string;
-}
