@@ -28,6 +28,7 @@ import {
   TerminStatusResponse,
 } from './dtos/TerminStatus.dto';
 import { Request } from 'express';
+import * as dayjs from 'dayjs'
 
 
 @Controller()
@@ -62,6 +63,7 @@ export class AppController {
     @Body() createParticipantDto: CreateParticipantDto,
     @Param('id') id: string,
   ): Promise<ParticipantResponse> {
+    await this.assert_is_voting_open(id)
     const participant = await this.prisma.participant.create({
       data: {
         participant_id: randomUUID(),
@@ -78,6 +80,7 @@ export class AppController {
     @Param('id') id: string,
     @Headers('Participant') participant_id: string,
   ): Promise<TerminStatusResponse> {
+    await this.assert_is_voting_open(id)
     await this.assert_event_exist(id)
     await this.assert_participant_exist(participant_id)
     const terminStatus = await this.prisma.terminStatus.upsert({
@@ -150,6 +153,7 @@ export class AppController {
     @Param('id') event_id: string, 
   ): Promise<void> {
     await this.assert_event_exist(event_id)
+    await this.assert_is_voting_open(event_id)
     const event = await this.prisma.event.findUnique({
       where: { event_id: event_id },
     });
@@ -185,10 +189,32 @@ export class AppController {
       throw new HttpException('Data startu nie może być po dacie zakończenia wydarzenia.', HttpStatus.BAD_REQUEST);
 }}
 
-async assert_voting_end(voting_date: Date){
+  async assert_voting_end(voting_date: Date){
   const current_date = new Date();
   if (current_date > voting_date) {
     throw new HttpException('Nieprawidłowo podano datę zakończenia głosowania', HttpStatus.BAD_REQUEST);
-}}
+  }}
+
+  async assert_is_voting_open(event_id: string) {
+  const event = await this.prisma.event.findUnique({
+    where: { event_id: event_id },
+    select: {
+      end: true,
+      voting_end : true
+     }
+  });
+
+    const current_date = dayjs();
+    const end_date = dayjs(event.end);
+    const voting_end_date = dayjs(event.voting_end);
+
+    if (end_date.isBefore(current_date)) {
+      throw new HttpException('Głosowanie na to wydarzenie zostało zakończone.', HttpStatus.BAD_REQUEST);
+    }
+    if (voting_end_date.isBefore(current_date)) {
+      throw new HttpException('Głosowanie na to wydarzenie zostało zakończone.', HttpStatus.BAD_REQUEST);
+    }
+
+  }
 }
 
