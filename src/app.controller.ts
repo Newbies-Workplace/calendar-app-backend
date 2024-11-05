@@ -10,7 +10,8 @@ import {
   Patch,
   BadRequestException,
   HttpException,
-  HttpStatus
+  HttpStatus,
+  Sse
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import { Event, Status } from '@prisma/client';
@@ -29,7 +30,20 @@ import {
 } from './dtos/TerminStatus.dto';
 import { Request } from 'express';
 import * as dayjs from 'dayjs'
+import {interval, map, Observable, Subject} from 'rxjs';
 
+export interface SseVoteUpdate {
+  event_id: string;
+  participant_id: string;
+  status: "AVAILABLE" | "NOT_AVAILABLE";
+  day: string;
+}
+
+interface MessageEvent{
+  data: string | object
+}
+
+const voteSubject = new Subject<SseVoteUpdate>();
 
 @Controller()
 export class AppController {
@@ -37,6 +51,16 @@ export class AppController {
     private readonly appService: AppService,
     private readonly prisma: PrismaService,
   ) {}
+
+  @Sse('event')
+  sendEvent(): Observable<MessageEvent> {
+    return voteSubject.asObservable().pipe(
+      map((vote) => ({
+        data: vote,
+      }))
+    );
+  }
+
 
   @Post('rest/events')
   async createEvent(
@@ -100,6 +124,16 @@ export class AppController {
         status: createTerminStatusDto.status
       }
     });
+
+    const voteUpdate: SseVoteUpdate = {
+      event_id: terminStatus.event_id,
+      participant_id: terminStatus.participant_id,
+      status: terminStatus.status,
+      day: terminStatus.day.toISOString(), // Konwertujemy datę na string
+    };
+
+    voteSubject.next(voteUpdate);
+
     return terminStatus;
   }
 
@@ -216,5 +250,9 @@ export class AppController {
     }
 
   }
+}
+
+function sse() {
+  throw new Error('Function not implemented.');
 }
 
