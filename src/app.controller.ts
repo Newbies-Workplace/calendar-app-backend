@@ -237,8 +237,3 @@ export class AppController {
 
   }
 }
-
-function sse() {
-  throw new Error('Function not implemented.');
-}
-
