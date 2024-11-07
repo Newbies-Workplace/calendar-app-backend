@@ -11,7 +11,8 @@ import {
   BadRequestException,
   HttpException,
   HttpStatus,
-  Sse
+  Sse,
+  UseGuards
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import { Event, Status } from '@prisma/client';
@@ -30,20 +31,10 @@ import {
 } from './dtos/TerminStatus.dto';
 import { Request } from 'express';
 import * as dayjs from 'dayjs'
-import {interval, map, Observable, Subject} from 'rxjs';
+import {filter, interval, map, Observable, Subject} from 'rxjs';
+import { ParticipantGuard } from './app.guard';
 
-export interface SseVoteUpdate {
-  event_id: string;
-  participant_id: string;
-  status: "AVAILABLE" | "NOT_AVAILABLE";
-  day: string;
-}
-
-interface MessageEvent{
-  data: string | object
-}
-
-const voteSubject = new Subject<SseVoteUpdate>();
+const voteSubject = new Subject<TerminStatusResponse>();
 
 @Controller()
 export class AppController {
@@ -52,13 +43,11 @@ export class AppController {
     private readonly prisma: PrismaService,
   ) {}
 
-  @Sse('event')
-  sendEvent(): Observable<MessageEvent> {
-    return voteSubject.asObservable().pipe(
-      map((vote) => ({
-        data: vote,
-      }))
-    );
+  @Sse('event/:id')
+  sendEvent(
+    @Param('id') id: string
+  ): Observable<TerminStatusResponse> {
+    return voteSubject.asObservable().pipe(filter((v: TerminStatusResponse) => v.event_id === id))
   }
 
 
@@ -98,7 +87,9 @@ export class AppController {
     return participant;
   }
 
+  
   @Put('rest/events/:id/statuses')
+  @UseGuards(ParticipantGuard)
   async createTerminStatus(
     @Body() createTerminStatusDto: CreateTerminStatusDto,
     @Param('id') id: string,
@@ -125,14 +116,7 @@ export class AppController {
       }
     });
 
-    const voteUpdate: SseVoteUpdate = {
-      event_id: terminStatus.event_id,
-      participant_id: terminStatus.participant_id,
-      status: terminStatus.status,
-      day: terminStatus.day.toISOString(), // Konwertujemy datę na string
-    };
-
-    voteSubject.next(voteUpdate);
+    voteSubject.next(terminStatus);
 
     return terminStatus;
   }
@@ -151,6 +135,7 @@ export class AppController {
   }
 
   @Get('rest/events/:id/participants')
+  @UseGuards(ParticipantGuard)
   async getParticipants(@Param('id') event_id: string): Promise<ParticipantResponse[]> {
     const Participants = await this.prisma.participant.findMany({
       where: { event_id: event_id },
@@ -165,6 +150,7 @@ export class AppController {
   }
 
   @Get('rest/events/:id/statuses')
+  @UseGuards(ParticipantGuard)
   async getTerminStatus(@Param('id') event_id: string): Promise<TerminStatusResponse[]> {
     await this.assert_event_exist(event_id)
     const TerminStatuses = await this.prisma.terminStatus.findMany({
