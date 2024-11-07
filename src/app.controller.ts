@@ -36,6 +36,10 @@ import { ParticipantGuard } from './app.guard';
 
 const voteSubject = new Subject<TerminStatusResponse>();
 
+interface SseMessage {
+  data: TerminStatusResponse
+}
+
 @Controller()
 export class AppController {
   constructor(
@@ -46,8 +50,11 @@ export class AppController {
   @Sse('event/:id')
   sendEvent(
     @Param('id') id: string
-  ): Observable<TerminStatusResponse> {
-    return voteSubject.asObservable().pipe(filter((v: TerminStatusResponse) => v.event_id === id))
+  ): Observable<SseMessage> {
+    return voteSubject.asObservable().pipe(
+      filter((v: TerminStatusResponse) => v.event_id === id),
+      map((v: TerminStatusResponse) => ({data: v}))
+    )
   }
 
 
@@ -87,7 +94,7 @@ export class AppController {
     return participant;
   }
 
-  
+
   @Put('rest/events/:id/statuses')
   @UseGuards(ParticipantGuard)
   async createTerminStatus(
@@ -168,7 +175,7 @@ export class AppController {
 
   @Patch('rest/events/:id/complete')
   async completeEvent(
-    @Param('id') event_id: string, 
+    @Param('id') event_id: string,
   ): Promise<void> {
     await this.assert_event_exist(event_id)
     await this.assert_is_voting_open(event_id)
