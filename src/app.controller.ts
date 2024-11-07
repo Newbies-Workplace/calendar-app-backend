@@ -135,7 +135,6 @@ export class AppController {
   }
 
   @Get('rest/events/:id/participants')
-  @UseGuards(ParticipantGuard)
   async getParticipants(@Param('id') event_id: string): Promise<ParticipantResponse[]> {
     const Participants = await this.prisma.participant.findMany({
       where: { event_id: event_id },
@@ -150,7 +149,6 @@ export class AppController {
   }
 
   @Get('rest/events/:id/statuses')
-  @UseGuards(ParticipantGuard)
   async getTerminStatus(@Param('id') event_id: string): Promise<TerminStatusResponse[]> {
     await this.assert_event_exist(event_id)
     const TerminStatuses = await this.prisma.terminStatus.findMany({
