@@ -10,7 +10,9 @@ import {
   Patch,
   BadRequestException,
   HttpException,
-  HttpStatus
+  HttpStatus,
+  Sse,
+  UseGuards
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import { Event, Status } from '@prisma/client';
@@ -29,7 +31,10 @@ import {
 } from './dtos/TerminStatus.dto';
 import { Request } from 'express';
 import * as dayjs from 'dayjs'
+import {filter, interval, map, Observable, Subject} from 'rxjs';
+import { ParticipantGuard } from './app.guard';
 
+const voteSubject = new Subject<TerminStatusResponse>();
 
 @Controller()
 export class AppController {
@@ -37,6 +42,14 @@ export class AppController {
     private readonly appService: AppService,
     private readonly prisma: PrismaService,
   ) {}
+
+  @Sse('event/:id')
+  sendEvent(
+    @Param('id') id: string
+  ): Observable<TerminStatusResponse> {
+    return voteSubject.asObservable().pipe(filter((v: TerminStatusResponse) => v.event_id === id))
+  }
+
 
   @Post('rest/events')
   async createEvent(
@@ -74,7 +87,9 @@ export class AppController {
     return participant;
   }
 
+  
   @Put('rest/events/:id/statuses')
+  @UseGuards(ParticipantGuard)
   async createTerminStatus(
     @Body() createTerminStatusDto: CreateTerminStatusDto,
     @Param('id') id: string,
@@ -100,6 +115,9 @@ export class AppController {
         status: createTerminStatusDto.status
       }
     });
+
+    voteSubject.next(terminStatus);
+
     return terminStatus;
   }
 
@@ -117,6 +135,7 @@ export class AppController {
   }
 
   @Get('rest/events/:id/participants')
+  @UseGuards(ParticipantGuard)
   async getParticipants(@Param('id') event_id: string): Promise<ParticipantResponse[]> {
     const Participants = await this.prisma.participant.findMany({
       where: { event_id: event_id },
@@ -131,6 +150,7 @@ export class AppController {
   }
 
   @Get('rest/events/:id/statuses')
+  @UseGuards(ParticipantGuard)
   async getTerminStatus(@Param('id') event_id: string): Promise<TerminStatusResponse[]> {
     await this.assert_event_exist(event_id)
     const TerminStatuses = await this.prisma.terminStatus.findMany({
@@ -217,4 +237,3 @@ export class AppController {
 
   }
 }
-
