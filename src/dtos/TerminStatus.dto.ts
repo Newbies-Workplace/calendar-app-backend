@@ -1,12 +1,12 @@
-import { Status, TerminStatus } from '@prisma/client';
-import {IsDateString, IsISO8601, IsEnum, Length } from 'class-validator';
+import { Status } from '@prisma/client';
+import { IsISO8601, IsEnum, Length } from 'class-validator';
 
 export class CreateTerminStatusDto {
   @IsISO8601({ strict: true }, { message: 'format daty to YYYY-MM-DD' })
   @Length(10, 10)
-    day: Date;
-  
-  @IsEnum (Status)
+  day: Date;
+
+  @IsEnum(Status)
   status: Status;
 }
 
