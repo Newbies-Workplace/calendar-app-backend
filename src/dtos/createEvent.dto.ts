@@ -1,6 +1,13 @@
 import { Event, EventStatus, Participant } from '@prisma/client';
 import { randomUUID } from 'crypto';
-import { IsString, Length, IsOptional, IsDateString, IsISO8601, IsNotEmpty } from 'class-validator';
+import {
+  IsString,
+  Length,
+  IsOptional,
+  IsDateString,
+  IsISO8601,
+  IsNotEmpty,
+} from 'class-validator';
 
 export class CreateEventDto {
   @IsString()
@@ -12,26 +19,29 @@ export class CreateEventDto {
   @Length(3, 20, { message: 'Nazwa musi mięć między 3 a 20 znaków' })
   @IsNotEmpty()
   owner: string;
-  
+
   @IsString()
   @IsOptional()
   @Length(0, 200, { message: 'Opis max 200 zmaków' })
   description: string | null;
-  
+
   @IsISO8601({ strict: true }, { message: 'format daty to YYYY-MM-DD' })
   start: Date;
-  
+
   @IsISO8601({ strict: true }, { message: 'format daty to YYYY-MM-DD' })
   end: Date;
 
-  @IsDateString({ strict: true }, { message: 'format daty to  YYYY-MM-DDThh:mm' })
+  @IsDateString(
+    { strict: true },
+    { message: 'format daty to  YYYY-MM-DDThh:mm' },
+  )
   voting_end: Date;
 }
 
 export class CreateParticipantDto {
-    @IsString()
-    @Length(3, 20, { message: 'Imię musi mięć między 3 a 20 znaków' })
-    name: string;
+  @IsString()
+  @Length(3, 20, { message: 'Imię musi mięć między 3 a 20 znaków' })
+  name: string;
 }
 
 export interface EventResponse {
@@ -47,6 +57,7 @@ export interface EventResponse {
 
 export interface ParticipantResponse {
   participant_id: string;
+  event_id: string;
   name: string;
 }
 
@@ -59,7 +70,7 @@ export class EventMapper {
       start: new Date(createEventDto.start),
       end: new Date(createEventDto.end),
       voting_end: new Date(createEventDto.voting_end),
-      status: EventStatus.ACTIVE
+      status: EventStatus.ACTIVE,
     };
   }
   static toDto(event: Event, owner: Participant): EventResponse {
@@ -70,8 +81,12 @@ export class EventMapper {
       start: event.start.toISOString(),
       end: event.end.toISOString(),
       voting_end: event.voting_end.toISOString(),
-      owner: { participant_id: owner.participant_id, name: owner.name },
-      status: event.status
+      owner: {
+        participant_id: owner.participant_id,
+        event_id: owner.event_id,
+        name: owner.name,
+      },
+      status: event.status,
     };
   }
 }

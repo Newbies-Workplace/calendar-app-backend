@@ -26,14 +26,11 @@ services:
       - "3000:3000"
     networks:
       - calendar-back-local
-      - reverse-proxy_global
     depends_on:
       - calendar-db
 
 networks:
   calendar-back-local:
-  reverse-proxy_global:
-    external: true
 
 volumes:
   calendar-db:
